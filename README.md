@@ -1,4 +1,5 @@
-# pick-uper
+# Browser Pick-Uper
+## Configure your browsers to work as your wish
 
 A .NET 10 app that registers itself as a Windows default browser but doesn't actually
 render anything: it reads a JSON config from your home folder and forwards the clicked
