@@ -45,3 +45,33 @@ jobs:
           name: pick-uper-${{ matrix.rid }}
           path: artifacts/publish/${{ matrix.rid }}/pick-uper.exe
           if-no-files-found: error
+
+  release:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Flatten artifacts into distinct filenames
+        run: |
+          mkdir -p release
+          mv dist/pick-uper-win-x64/pick-uper.exe release/pick-uper-win-x64.exe
+          mv dist/pick-uper-win-x86/pick-uper.exe release/pick-uper-win-x86.exe
+
+      # Every push to main gets its own tag/release, versioned by this workflow's
+      # run number (1.0.<N>) — a permanent, ever-growing history instead of one
+      # release whose assets keep getting replaced.
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: 1.0.${{ github.run_number }}
+          name: 1.0.${{ github.run_number }}
+          body: |
+            Automated Native AOT build of `main` @ ${{ github.sha }}.
+            Self-contained, single-file exe — no .NET runtime needed on the target machine.
+          make_latest: true
+          files: release/*.exe
