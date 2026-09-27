@@ -30,6 +30,23 @@ public static class ConfigLoader
     /// <summary>Path used by <c>--init-config</c>.</summary>
     public static string PreferredPath(string homeDirectory) => CandidatePaths(homeDirectory)[0];
 
+    /// <summary>
+    /// The config path that would actually be used — same override-then-candidate-list
+    /// order as <see cref="Load"/> — or null if none of them exist yet. Used by
+    /// <c>--init-config</c> to tell "no config anywhere" from "one exists, just not at the
+    /// preferred path", so it never writes a second, shadowing file.
+    /// </summary>
+    public static string? FindExisting(string homeDirectory, string? explicitPath = null)
+    {
+        var overridePath = explicitPath ?? Environment.GetEnvironmentVariable(PathEnvironmentVariable);
+        if (!string.IsNullOrWhiteSpace(overridePath))
+        {
+            return File.Exists(overridePath) ? overridePath : null;
+        }
+
+        return CandidatePaths(homeDirectory).FirstOrDefault(File.Exists);
+    }
+
     public static ConfigLoadResult Load(string homeDirectory, string? explicitPath = null)
     {
         var overridePath = explicitPath ?? Environment.GetEnvironmentVariable(PathEnvironmentVariable);
@@ -40,16 +57,8 @@ public static class ConfigLoader
                 : new ConfigLoadResult(null, overridePath, $"config not found: {overridePath}", []);
         }
 
-        var candidates = CandidatePaths(homeDirectory);
-        foreach (var candidate in candidates)
-        {
-            if (File.Exists(candidate))
-            {
-                return LoadFrom(candidate);
-            }
-        }
-
-        return ConfigLoadResult.NotFound(candidates);
+        var existing = FindExisting(homeDirectory);
+        return existing is not null ? LoadFrom(existing) : ConfigLoadResult.NotFound(CandidatePaths(homeDirectory));
     }
 
     private static ConfigLoadResult LoadFrom(string path)

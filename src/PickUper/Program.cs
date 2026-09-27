@@ -12,6 +12,11 @@ internal static class Program
 {
     private static int Main(string[] args)
     {
+        if (args.Length == 0)
+        {
+            return RunInteractiveMenu();
+        }
+
         var options = CommandLine.Parse(args);
 
         if (options.Url is not null && !options.IsCommand)
@@ -19,10 +24,11 @@ internal static class Program
             return Route(options.Url, options.ConfigPath);
         }
 
-        // Anything that talks to the user needs the console of whoever started us.
-        ConsoleBridge.AttachToParent();
+        // Anything that talks to the user needs the console of whoever started us — or,
+        // failing that (e.g. double-clicked from Explorer), a freshly allocated one.
+        ConsoleBridge.EnsureConsole();
 
-        return options.Command switch
+        var exitCode = options.Command switch
         {
             CliCommand.Install => Install(options),
             CliCommand.Uninstall => Uninstall(options),
@@ -36,6 +42,55 @@ internal static class Program
             CliCommand.Help => PrintHelp(0),
             _ => PrintHelp(1),
         };
+
+        ConsoleBridge.PauseIfOwned();
+        return exitCode;
+    }
+
+    /// <summary>
+    /// Launched with no arguments at all — most likely by double-clicking the exe. Rather
+    /// than just printing help and closing, offer a menu of the same commands.
+    /// </summary>
+    private static int RunInteractiveMenu()
+    {
+        ConsoleBridge.EnsureConsole();
+
+        Console.WriteLine($"pick-uper {Version()} — a default browser that forwards links to other browsers.");
+        Console.WriteLine();
+        Console.WriteLine("  1. Install (copy into place, register, write a config)");
+        Console.WriteLine("  2. Uninstall");
+        Console.WriteLine("  3. Status");
+        Console.WriteLine("  4. Check a URL");
+        Console.WriteLine("  5. Set as default browser");
+        Console.WriteLine("  6. Register");
+        Console.WriteLine("  7. Unregister");
+        Console.WriteLine("  8. Write a starter config");
+        Console.WriteLine("  9. Help");
+        Console.WriteLine();
+        Console.Write("Choose a command [1-9]: ");
+
+        var exitCode = Console.ReadLine()?.Trim() switch
+        {
+            "1" => Install(new CommandLineOptions(CliCommand.Install, null, null)),
+            "2" => Uninstall(new CommandLineOptions(CliCommand.Uninstall, null, null)),
+            "3" => Status(null),
+            "4" => CheckFromPrompt(),
+            "5" => SetDefault(),
+            "6" => Register(),
+            "7" => Unregister(),
+            "8" => InitConfig(null),
+            "9" => PrintHelp(0),
+            _ => PrintHelp(1),
+        };
+
+        ConsoleBridge.PauseIfOwned();
+        return exitCode;
+    }
+
+    private static int CheckFromPrompt()
+    {
+        Console.Write("URL to check: ");
+        return Check(Console.ReadLine(), null);
     }
 
     // ---------------------------------------------------------------- routing
@@ -169,8 +224,8 @@ internal static class Program
             Console.WriteLine($"warning: could not create the Start Menu shortcut: {ex.Message}");
         }
 
-        var configPath = options.ConfigPath ?? ConfigLoader.PreferredPath(HomeDirectory());
-        if (!File.Exists(configPath))
+        var existingConfig = ConfigLoader.FindExisting(HomeDirectory(), options.ConfigPath);
+        if (existingConfig is null)
         {
             var initResult = InitConfig(options.ConfigPath);
             if (initResult != 0)
@@ -180,7 +235,7 @@ internal static class Program
         }
         else
         {
-            Console.WriteLine($"Config already exists: {configPath}");
+            Console.WriteLine($"Config already exists: {existingConfig}");
         }
 
         var registerResult = Register();
@@ -401,13 +456,14 @@ internal static class Program
 
     private static int InitConfig(string? configPath)
     {
-        var path = configPath ?? ConfigLoader.PreferredPath(HomeDirectory());
-
-        if (File.Exists(path))
+        var existing = ConfigLoader.FindExisting(HomeDirectory(), configPath);
+        if (existing is not null)
         {
-            Console.Error.WriteLine($"{path} already exists — not overwriting it");
+            Console.Error.WriteLine($"{existing} already exists — not overwriting it");
             return 1;
         }
+
+        var path = configPath ?? ConfigLoader.PreferredPath(HomeDirectory());
 
         try
         {

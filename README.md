@@ -169,6 +169,10 @@ launched it.
 
 ## Commands
 
+Double-clicking `pick-uper.exe` (or running it with no arguments at all) opens a numbered
+menu of the same commands instead of just printing help and closing — pick one, and the
+window waits for a keypress before it closes so the output doesn't just flash by.
+
 ```
 pick-uper <url>            open the URL in the browser your rules select
 pick-uper --install        install to %LOCALAPPDATA%\Programs\pick-uper, shortcut, config, registration
@@ -198,8 +202,9 @@ command: ...\chrome.exe --profile-directory="Profile 1" https://acme.slack.com/m
 ```
 
 The app is built as a `WinExe`, so no console flashes when you click a link; for
-commands it attaches to the parent process's console, so output shows up normally in
-`cmd` and PowerShell.
+commands it attaches to the parent process's console when there is one (`cmd`,
+PowerShell), or allocates a fresh console window otherwise (double-clicked from
+Explorer).
 
 ## What registration does
 

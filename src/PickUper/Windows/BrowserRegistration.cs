@@ -140,10 +140,15 @@ public static partial class BrowserRegistration
     public static bool IsDefaultBrowser() =>
         UrlProtocols.All(p => string.Equals(CurrentUserChoice(p), ProgId, StringComparison.OrdinalIgnoreCase));
 
-    /// <summary>Windows 10+ only exposes the "make default" flow through Settings.</summary>
+    /// <summary>
+    /// Windows 10+ only exposes the "make default" flow through Settings. This deep-links
+    /// straight to Pick-Uper's own "App defaults" page (one big Set default button) instead
+    /// of the full app list — the query value has to be <see cref="ApplicationKey"/>, the
+    /// name it's registered under in <c>RegisteredApplications</c>, not the display name.
+    /// </summary>
     public static void OpenDefaultAppsSettings()
     {
-        var uri = $"ms-settings:defaultapps?registeredAppUser={ApplicationName}";
+        var uri = $"ms-settings:defaultapps?registeredAppUser={ApplicationKey}";
         using var process = System.Diagnostics.Process.Start(
             new System.Diagnostics.ProcessStartInfo(uri) { UseShellExecute = true });
     }

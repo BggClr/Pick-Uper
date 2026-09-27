@@ -89,6 +89,46 @@ public class ConfigLoaderTests
     }
 
     [Fact]
+    public void FindExisting_sees_a_config_at_a_non_preferred_candidate_path()
+    {
+        var home = Directory.CreateTempSubdirectory("pick-uper-find-existing").FullName;
+        try
+        {
+            Assert.Null(ConfigLoader.FindExisting(home));
+
+            // Only the second candidate exists — --init-config must not treat this as "no
+            // config yet" and write a shadowing file at the (unused) preferred path.
+            var second = ConfigLoader.CandidatePaths(home)[1];
+            File.WriteAllText(second, "{}");
+
+            Assert.Equal(second, ConfigLoader.FindExisting(home));
+        }
+        finally
+        {
+            Directory.Delete(home, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void FindExisting_honors_an_explicit_path_regardless_of_candidates()
+    {
+        var home = Directory.CreateTempSubdirectory("pick-uper-find-existing-explicit").FullName;
+        try
+        {
+            var explicitPath = Path.Combine(home, "custom.json");
+
+            Assert.Null(ConfigLoader.FindExisting(home, explicitPath));
+
+            File.WriteAllText(explicitPath, "{}");
+            Assert.Equal(explicitPath, ConfigLoader.FindExisting(home, explicitPath));
+        }
+        finally
+        {
+            Directory.Delete(home, recursive: true);
+        }
+    }
+
+    [Fact]
     public void Missing_config_is_reported_with_the_paths_it_looked_at()
     {
         var home = Directory.CreateTempSubdirectory("pick-uper-empty").FullName;
