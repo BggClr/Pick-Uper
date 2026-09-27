@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PickUper.Core/PickUper.Core.csproj" />
+    <Project Path="src/PickUper/PickUper.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PickUper.Core.Tests/PickUper.Core.Tests.csproj" />
+  </Folder>
+</Solution>

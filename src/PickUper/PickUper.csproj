@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <AssemblyName>pick-uper</AssemblyName>
+    <RootNamespace>PickUper</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- Required by the [LibraryImport] source generator. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- Lets the Windows-targeting build run on macOS/Linux. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <IsAotCompatible>true</IsAotCompatible>
+
+    <Version>1.0.0</Version>
+    <Product>Pick-Uper</Product>
+    <Description>Default browser that dispatches links to other browsers by URL rules.</Description>
+  </PropertyGroup>
+
+  <!-- Single-file, trimmed output. Only applied when a RID is given (i.e. on publish). -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>true</PublishTrimmed>
+    <!-- Every link click starts this process, so trade size for startup time:
+         precompiled code, no single-file decompression step. -->
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <EnableCompressionInSingleFile>false</EnableCompressionInSingleFile>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PickUper.Core\PickUper.Core.csproj" />
+  </ItemGroup>
+
+</Project>

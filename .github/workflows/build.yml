@@ -1,0 +1,47 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - run: dotnet test tests/PickUper.Core.Tests/PickUper.Core.Tests.csproj
+
+  build:
+    needs: test
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        rid: [win-x64, win-x86]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      # Native AOT needs the MSVC linker, which only ships with Windows, so this
+      # build (unlike the trimmed/ReadyToRun one) can't be cross-compiled from
+      # macOS/Linux — it has to run on a windows-latest runner.
+      - name: Publish Native AOT (${{ matrix.rid }})
+        shell: bash
+        run: ./scripts/build.sh -r ${{ matrix.rid }} -a
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pick-uper-${{ matrix.rid }}
+          path: artifacts/publish/${{ matrix.rid }}/pick-uper.exe
+          if-no-files-found: error

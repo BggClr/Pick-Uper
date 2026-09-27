@@ -1,0 +1,67 @@
+namespace PickUper.Core.Configuration;
+
+public static class DefaultConfig
+{
+    /// <summary>
+    /// Written by <c>--init-config</c>. Hand-formatted rather than serialized so the file
+    /// the user opens has comments and a sensible layout.
+    /// </summary>
+    public const string Template = """
+        {
+          // pick-uper — routes every clicked link to the browser you want.
+          // Patterns:  example.com | *.example.com | example.com/path/* | https://*.example.com/*
+          //            regex:^https://.*\.corp\.example\.com/
+          // The first matching rule wins; unmatched URLs go to "defaultBrowser".
+
+          "defaultBrowser": "edge",
+
+          "browsers": {
+            "edge": {
+              "name": "Microsoft Edge",
+              "path": "msedge.exe"
+            },
+            "chrome": {
+              "name": "Google Chrome",
+              "path": "chrome.exe"
+            },
+            "work": {
+              "name": "Chrome (work profile)",
+              "path": "chrome.exe",
+              "args": ["--profile-directory=Profile 1"]
+            },
+            "firefox-private": {
+              "name": "Firefox (private window)",
+              "path": "firefox.exe",
+              "args": ["-private-window", "{url}"]
+            }
+          },
+
+          "rules": [
+            {
+              "comment": "Work stuff in the work profile",
+              "matches": ["*.slack.com", "*.atlassian.net", "*.sharepoint.com"],
+              "browser": "work"
+            },
+            {
+              "match": "*.github.com",
+              "browser": "chrome"
+            },
+            {
+              "comment": "Local dev servers, with or without a port",
+              "matches": ["localhost/*", "localhost:*/*", "127.0.0.1:*/*"],
+              "browser": "chrome"
+            },
+            {
+              "comment": "Anything on the corporate domain",
+              "match": "regex:^https://([^/]*\\.)?corp\\.example\\.com/",
+              "browser": "work"
+            }
+          ],
+
+          "logging": {
+            "enabled": false
+          }
+        }
+
+        """;
+}
