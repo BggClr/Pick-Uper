@@ -12,9 +12,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "10.0.x"
 
@@ -27,9 +27,9 @@ jobs:
       matrix:
         rid: [win-x64, win-x86]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "10.0.x"
 
@@ -40,7 +40,7 @@ jobs:
         shell: bash
         run: ./scripts/build.sh -r ${{ matrix.rid }} -a
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: pick-uper-${{ matrix.rid }}
           path: artifacts/publish/${{ matrix.rid }}/pick-uper.exe
@@ -53,7 +53,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: dist
 
@@ -66,7 +66,7 @@ jobs:
       # Every push to main gets its own tag/release, versioned by this workflow's
       # run number (1.0.<N>) — a permanent, ever-growing history instead of one
       # release whose assets keep getting replaced.
-      - uses: softprops/action-gh-release@v2
+      - uses: softprops/action-gh-release@v3
         with:
           tag_name: 1.0.${{ github.run_number }}
           name: 1.0.${{ github.run_number }}
